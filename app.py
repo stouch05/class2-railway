@@ -22,7 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 接口（必须放在最前面，绝对不被覆盖）
+# Health check — confirms the app is running before anything else
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+# 静态资源（mount before root route so /static/* is resolved first）
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 接口
 class ChatRequest(BaseModel):
     message: str
 
@@ -41,10 +49,11 @@ async def chat(req: ChatRequest):
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
 
-# 【关键修复】只匹配 / 不影响 /chat
+# Root — serve index.html with a fallback if the file is missing
 @app.get("/", include_in_schema=False)
 async def index():
-    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
-
-# 静态资源
-app.mount("/static", StaticFiles(directory="static"), name="static")
+    try:
+        index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+        return FileResponse(index_path)
+    except Exception as e:
+        return {"error": f"Could not load index.html: {e}"}
