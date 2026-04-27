@@ -1,8 +1,4 @@
-import os
-
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
@@ -27,9 +23,6 @@ app.add_middleware(
 async def health():
     return {"status": "ok"}
 
-# 静态资源（mount before root route so /static/* is resolved first）
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # 接口
 class ChatRequest(BaseModel):
     message: str
@@ -47,13 +40,8 @@ async def chat(req: ChatRequest):
         )
         return {"reply": completion.choices[0].message.content}
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Root — serve index.html with a fallback if the file is missing
-@app.get("/", include_in_schema=False)
+@app.get("/")
 async def index():
-    try:
-        index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
-        return FileResponse(index_path)
-    except Exception as e:
-        return {"error": f"Could not load index.html: {e}"}
+    return {"message": "Hello from FastAPI"}
