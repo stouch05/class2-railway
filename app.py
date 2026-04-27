@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -42,7 +44,7 @@ async def chat(req: ChatRequest):
 # 【关键修复】只匹配 / 不影响 /chat
 @app.get("/", include_in_schema=False)
 async def index():
-    return FileResponse("./static/index.html")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
 
 # 静态资源
 app.mount("/static", StaticFiles(directory="static"), name="static")
