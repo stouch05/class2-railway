@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 对话助手</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .chat-box {
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 75%;
+        }
+        .user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        .bot {
+            background: #e9ecef;
+            color: #333;
+            margin-right: auto;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="输入你的问题...">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        // 这就是完整的 sendMessage 函数，已经帮你放好位置了
+     async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML += `<div class="message user">${message}</div>`;
+    input.value = '';
+
+    try {
+        // 只改这一行！！！写全地址，绝对不会返回HTML！！！
+        const res = await fetch('http://127.0.0.1:8000/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(`错误 ${res.status}: ${err.detail}`);
+        }
+
+        const data = await res.json();
+        chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
+    } catch (err) {
+        chatBox.innerHTML += `<div class="message bot">${err.message}</div>`;
+        console.error(err);
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
